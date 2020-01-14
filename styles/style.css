@@ -40,3 +40,7 @@ body {
 .board .square:hover {
     background-color: gray;
 }
+
+.player-names {
+    padding: 20px 0;
+}

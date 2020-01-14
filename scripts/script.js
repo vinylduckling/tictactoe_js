@@ -42,7 +42,9 @@ var game = (() => {
         
     };
  
-    return{currentTurn,
+    return{
+        players,
+        currentTurn,
         setPlayers,
         getTurn,
         updateTurn, 
@@ -52,7 +54,7 @@ var game = (() => {
 })();
 
 
-var PlayerFactory = (name, x) => {
+var PlayerFactory = (name) => {
     var name = name;
     
     return {
@@ -166,11 +168,18 @@ const checkThreeAlgos = ((board) => {
 
 var displayController = (() => {
     //Should request the game to make a move
-    //game checks if it's legal
-    //If it is, updates view -> says illegal move or updates board
 
+    var setPlayerNames = () => {
+        let playerNames = View.getPlayerNamesFromView();
+        console.log(PlayerFactory(playerNames[0]));
+        console.log(PlayerFactory(playerNames[1]));
+        game.setPlayers(PlayerFactory(playerNames[0]), PlayerFactory(playerNames[1]));
+        View.renderHidePlayerNamesInput();
+        
+    };
     var checkLegal = (i) => gameboard.isLegalMove(i);
     var checkTurn = () => game.getTurn();
+    
     var executeMove = (e) => {
         let i = parseInt(e.target.id.match(/(\d+)/));
         if(checkLegal(i)) {
@@ -215,54 +224,11 @@ var displayController = (() => {
     };
     return {
         executeMove,
-        restart
+        restart,
+        setPlayerNames
     };
 })();
 
-// function render() {
-//     let squares = document.querySelectorAll(".square");
-//     for(var i = 0; i < squares.length; i++) {
-//         squares[i].textContent = gameboard.getSquare(i);
-//     }
-// };
-
-// function renderSquare(i, content) {
-//     let square = document.getElementById('square-'+i);
-//         square.textContent = content;
-
-// }
-
-// function renderPlayerTurn(turn) {
-//     let playerTurn = document.querySelector(".player-turn")
-//     if(turn == 0) {
-//         playerTurn.textContent = "Player 1's Turn";
-//     } else {
-//         playerTurn.textContent = "Player 2's Turn";
-//     }
-// }
-
-// function renderIllegalMove() {
-//     let message = document.querySelector(".announcement-message");
-//     message.textContent="Illegal Move, Move Somewhere Else";
-// }
-
-// function renderNotIllegalMove() {
-//     let message = document.querySelector(".announcement-message");
-//     message.textContent="";
-// }
-
-// function renderWinner(i) {
-//     let message = document.querySelector(".announcement-message");
-//     let winner = i+1;
-//     message.textContent = "Player " + winner + " wins!";
-// }
-
-// function addSquareListeners() {
-//     let squares = document.querySelectorAll(".square");
-//     for(var i = 0; i < squares.length; i++) {
-//         squares[i].addEventListener("click", displayController.executeMove);
-//     }
-// }
 
 
 const View = (() => {
@@ -314,7 +280,21 @@ const View = (() => {
     const renderReset = () => {
         render();
         renderPlayerTurn(0);
-    }
+    };
+
+    const getPlayerNamesFromView = () => {
+        let playerNames = [];
+        let playerName1 = document.querySelector("#player-1").value;
+        let playerName2 = document.querySelector("#player-2").value;
+        playerNames.push(playerName1);
+        playerNames.push(playerName2);
+        return playerNames;
+    };
+
+    const renderHidePlayerNamesInput = () => {
+        let playerNamesInput = document.querySelector(".player-names");
+        playerNamesInput.style.display = "none";
+    };
     return {
         render, 
         renderSquare,
@@ -323,7 +303,9 @@ const View = (() => {
         renderNotIllegalMove, 
         renderWinner, 
         renderTie, 
-        renderReset
+        renderReset, 
+        getPlayerNamesFromView,
+        renderHidePlayerNamesInput
     };
 
 })();
@@ -340,12 +322,24 @@ const Setup = (() => {
         let restartButton = document.querySelector(".restart");
         restartButton.addEventListener("click", displayController.restart);
     };
+
+    const addNamesListener = () => {
+        let enterButton = document.querySelector("#enter-names");
+        enterButton.addEventListener("click", displayController.setPlayerNames);
+    }
+
+    const initialize = () => {
+        addSquareListeners();
+        addRestartListener();
+        addNamesListener();
+    }
     return {
         addSquareListeners,
-        addRestartListener
+        addRestartListener,
+        addNamesListener,
+        initialize
     };
 })();
 
-Setup.addSquareListeners();
-Setup.addRestartListener();
-View.render();
+Setup.initialize();
+//View.render();
