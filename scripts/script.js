@@ -184,7 +184,7 @@ var displayController = (() => {
         let i = parseInt(e.target.id.match(/(\d+)/));
         if(checkLegal(i)) {
             View.renderNotIllegalMove();
-            //Check the player turn to know if x or y
+            //Check the player turn to know if x or o
             if(checkTurn() == 0) {
                 gameboard.updateBoard(i, "X");
                 View.renderSquare(i, "X");
@@ -293,7 +293,7 @@ const View = (() => {
 
     const renderHidePlayerNamesInput = () => {
         let playerNamesInput = document.querySelector(".player-names");
-        playerNamesInput.style.display = "none";
+        playerNamesInput.style.visibility = "hidden";
     };
     return {
         render, 
