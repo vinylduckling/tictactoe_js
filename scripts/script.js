@@ -25,12 +25,32 @@ var gameboard = (() => {
 })();
 
 
+var PlayerFactory = (name) => {
+    var name = name;
+    
+    var getName = () => name;
+    var setName = (somename) => {
+        name = somename;
+        //Question: Why does using "this.name=name or using 'this' in setters not result in correct behavior?
+    };
+    return {
+        getName, 
+        setName    
+    };
+};
+
 var game = (() => {
-    var players = [];
+    var players = [PlayerFactory("Player 1"), PlayerFactory("Player 2")];
     var currentTurn = 0;
-    var setPlayers = (player1, player2) => {
-        players.push(player1);
-        players.push(player2);
+    var setPlayersNames = (player1, player2) => {
+        if (player1 == "") {
+            player1 = "Player 1";
+        }
+        if (player2 == "") {
+            player2 = "Player 2";
+        }
+        players[0].setName(player1);
+        players[1].setName(player2);
         currentTurn = 0;
     }
     var getTurn = () => currentTurn;
@@ -45,7 +65,7 @@ var game = (() => {
     return{
         players,
         currentTurn,
-        setPlayers,
+        setPlayersNames,
         getTurn,
         updateTurn, 
         resetGame
@@ -54,13 +74,6 @@ var game = (() => {
 })();
 
 
-var PlayerFactory = (name) => {
-    var name = name;
-    
-    return {
-        name,
-    };
-};
 
 const checkThreeAlgos = ((board) => {    
     const xOrO = (x) => x == "X" ? 0 : 1;
@@ -171,9 +184,7 @@ var displayController = (() => {
 
     var setPlayerNames = () => {
         let playerNames = View.getPlayerNamesFromView();
-        console.log(PlayerFactory(playerNames[0]));
-        console.log(PlayerFactory(playerNames[1]));
-        game.setPlayers(PlayerFactory(playerNames[0]), PlayerFactory(playerNames[1]));
+        game.setPlayersNames(playerNames[0], playerNames[1]);
         View.renderHidePlayerNamesInput();
         
     };
@@ -197,12 +208,16 @@ var displayController = (() => {
             let winner = gameboard.checkThree(i);
             if(winner > -1) {
                 View.renderWinner(winner);
+                Setup.disableSquareListeners();
             }
-            //check for tie, board filled
-            let isTie = gameboard.checkTie(); 
-            if (isTie == 1) {
-                View.renderTie();
+            else{
+                //check for tie, board filled and no winner
+                let isTie = gameboard.checkTie(); 
+                if (isTie == 1) {
+                    View.renderTie();
+                }
             }
+            
 
             //otherwise 
             //update turn
@@ -220,6 +235,7 @@ var displayController = (() => {
         gameboard.refreshBoard();
         game.resetGame();
         View.renderReset();
+        Setup.addSquareListeners();
 
     };
     return {
@@ -248,9 +264,9 @@ const View = (() => {
     const renderPlayerTurn = (turn) => {
         let playerTurn = document.querySelector(".player-turn")
         if(turn == 0) {
-            playerTurn.textContent = "Player 1's Turn";
+            playerTurn.textContent = game.players[0].getName() + "'s Turn";
         } else {
-            playerTurn.textContent = "Player 2's Turn";
+            playerTurn.textContent = game.players[1].getName() + "'s Turn";
         }
     };
 
@@ -267,7 +283,8 @@ const View = (() => {
     const renderWinner = (i) => {
         let message = document.querySelector(".announcement-message");
         let winner = i+1;
-        message.textContent = "Player " + winner + " wins!";
+        winner = game.players[winner].getName();
+        message.textContent = winner + " wins!";
     };
 
     const renderTie = () => {
@@ -276,10 +293,16 @@ const View = (() => {
     };
 
 
+    const renderClearMessage = () => {
+        let message = document.querySelector(".announcement-message");
+        message.textContent = "";
+    }
 
     const renderReset = () => {
         render();
         renderPlayerTurn(0);
+        renderClearMessage();
+        
     };
 
     const getPlayerNamesFromView = () => {
@@ -295,6 +318,8 @@ const View = (() => {
         let playerNamesInput = document.querySelector(".player-names");
         playerNamesInput.style.visibility = "hidden";
     };
+
+
     return {
         render, 
         renderSquare,
@@ -318,6 +343,13 @@ const Setup = (() => {
         }
     };
 
+    const disableSquareListeners = () => {
+        let squares = document.querySelectorAll(".square");
+        for(var i = 0; i < squares.length; i++) {
+            squares[i].removeEventListener("click", displayController.executeMove);
+        }
+    };
+
     const addRestartListener = () => {
         let restartButton = document.querySelector(".restart");
         restartButton.addEventListener("click", displayController.restart);
@@ -337,7 +369,8 @@ const Setup = (() => {
         addSquareListeners,
         addRestartListener,
         addNamesListener,
-        initialize
+        initialize,
+        disableSquareListeners
     };
 })();
 
